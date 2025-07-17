@@ -1,0 +1,254 @@
+import express from 'express';
+import serverless from 'serverless-http';
+import cors from 'cors';
+import fetch from 'node-fetch';
+
+const app = express();
+
+// TMDB API Configuration
+const TMDB_API_KEY = '6b8e3eaa1a03ebb45642e9531d8a76d2';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+// In-memory storage for demo (in production, use a database)
+let movieAndSeriesData = {
+  movies: [
+    {
+      id: "tmdb:550",
+      tmdb_id: "550",
+      title: "Fight Club",
+      year: 1999,
+      streams: [
+        {
+          quality: "1080p",
+          size: "2.1 GB",
+          language: "English",
+          magnet: "magnet:?xt=urn:btih:EXAMPLE_HASH_FOR_FIGHT_CLUB&dn=Fight.Club.1999.1080p.BluRay.x264&tr=udp://tracker.example.com:80"
+        }
+      ]
+    }
+  ],
+  series: [
+    {
+      id: "tmdb:1399",
+      tmdb_id: "1399",
+      title: "Game of Thrones",
+      year: 2011,
+      streams: [
+        {
+          quality: "1080p",
+          size: "45 GB",
+          language: "English",
+          season: "complete",
+          magnet: "magnet:?xt=urn:btih:EXAMPLE_HASH_FOR_GOT&dn=Game.of.Thrones.Complete.Series.1080p&tr=udp://tracker.example.com:80"
+        }
+      ]
+    }
+  ]
+};
+
+// Addon manifest
+const manifest = {
+  id: 'com.gley.addon',
+  version: '1.0.0',
+  name: 'GleyAddon',
+  description: 'Professional addon for movies and series with high-quality streams',
+  logo: 'https://i.postimg.cc/D0PyKk3c/EFProject-Logo.png',
+  background: 'https://i.postimg.cc/JhHrzBW0/background-Home.png',
+  resources: ['catalog', 'meta', 'stream'],
+  types: ['movie', 'series'],
+  catalogs: [
+    {
+      type: 'movie',
+      id: 'gley-movies',
+      name: 'GleyAddon Movies',
+      extra: [
+        { name: 'search', isRequired: false },
+        { name: 'genre', isRequired: false, options: ['Action', 'Comedy', 'Drama', 'Horror', 'Thriller', 'Romance', 'Sci-Fi'] },
+        { name: 'skip', isRequired: false }
+      ]
+    },
+    {
+      type: 'series',
+      id: 'gley-series',
+      name: 'GleyAddon Series',
+      extra: [
+        { name: 'search', isRequired: false },
+        { name: 'genre', isRequired: false, options: ['Action', 'Comedy', 'Drama', 'Horror', 'Thriller', 'Romance', 'Sci-Fi'] },
+        { name: 'skip', isRequired: false }
+      ]
+    }
+  ],
+  idPrefixes: ['tt', 'tmdb']
+};
+
+app.use(cors());
+app.use(express.json());
+
+// TMDB API helpers
+async function searchTMDB(query, type = 'movie') {
+  const url = `${TMDB_BASE_URL}/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`;
+  const response = await fetch(url);
+  return response.json();
+}
+
+async function getTMDBDetails(id, type = 'movie') {
+  const url = `${TMDB_BASE_URL}/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=credits,videos`;
+  const response = await fetch(url);
+  return response.json();
+}
+
+async function getPopularContent(type = 'movie', page = 1) {
+  const url = `${TMDB_BASE_URL}/${type}/popular?api_key=${TMDB_API_KEY}&page=${page}`;
+  const response = await fetch(url);
+  return response.json();
+}
+
+// Convert TMDB data to Stremio format
+function convertToStremioMeta(tmdbItem, type) {
+  const isMovie = type === 'movie';
+  const title = isMovie ? tmdbItem.title : tmdbItem.name;
+  const year = isMovie ? 
+    tmdbItem.release_date?.split('-')[0] : 
+    tmdbItem.first_air_date?.split('-')[0];
+
+  return {
+    id: `tmdb:${tmdbItem.id}`,
+    type: type,
+    name: title,
+    poster: tmdbItem.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbItem.poster_path}` : null,
+    background: tmdbItem.backdrop_path ? `https://image.tmdb.org/t/p/w1280${tmdbItem.backdrop_path}` : null,
+    year: year ? parseInt(year) : null,
+    imdbRating: tmdbItem.vote_average || null,
+    description: tmdbItem.overview || '',
+    genre: tmdbItem.genre_ids ? tmdbItem.genre_ids.map(id => getGenreName(id)) : [],
+    director: tmdbItem.credits?.crew?.find(person => person.job === 'Director')?.name || null,
+    cast: tmdbItem.credits?.cast?.slice(0, 5).map(actor => actor.name) || []
+  };
+}
+
+function getGenreName(id) {
+  const genres = {
+    28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+    99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+    27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+    10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
+  };
+  return genres[id] || 'Unknown';
+}
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'GleyAddon - Professional Stremio Addon',
+    version: '1.0.0',
+    endpoints: {
+      manifest: '/manifest.json',
+      catalog: '/catalog/:type/:id.json',
+      meta: '/meta/:type/:id.json',
+      stream: '/stream/:type/:id.json'
+    }
+  });
+});
+
+app.get('/manifest.json', (req, res) => {
+  res.json(manifest);
+});
+
+app.get('/catalog/:type/:id.json', async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { search, genre, skip = 0 } = req.query;
+    
+    let results = [];
+    
+    if (search) {
+      const tmdbResults = await searchTMDB(search, type);
+      results = tmdbResults.results?.slice(0, 20).map(item => convertToStremioMeta(item, type)) || [];
+    } else {
+      const page = Math.floor(skip / 20) + 1;
+      const tmdbResults = await getPopularContent(type, page);
+      results = tmdbResults.results?.slice(0, 20).map(item => convertToStremioMeta(item, type)) || [];
+    }
+    
+    res.json({ metas: results });
+  } catch (error) {
+    console.error('Catalog error:', error);
+    res.json({ metas: [] });
+  }
+});
+
+app.get('/meta/:type/:id.json', async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const tmdbId = id.replace('tmdb:', '');
+    
+    const tmdbDetails = await getTMDBDetails(tmdbId, type);
+    const meta = convertToStremioMeta(tmdbDetails, type);
+    
+    // Add additional details
+    meta.runtime = tmdbDetails.runtime || tmdbDetails.episode_run_time?.[0] || null;
+    meta.country = tmdbDetails.production_countries?.[0]?.name || null;
+    meta.language = tmdbDetails.original_language || null;
+    
+    if (type === 'series') {
+      meta.seasons = tmdbDetails.number_of_seasons || null;
+      meta.episodes = tmdbDetails.number_of_episodes || null;
+    }
+    
+    res.json({ meta });
+  } catch (error) {
+    console.error('Meta error:', error);
+    res.status(404).json({ error: 'Content not found' });
+  }
+});
+
+app.get('/stream/:type/:id.json', async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    
+    let streams = [];
+    const contentArray = type === 'movie' ? movieAndSeriesData.movies : movieAndSeriesData.series;
+    const content = contentArray.find(item => item.id === id || `tmdb:${item.tmdb_id}` === id);
+    
+    if (content && content.streams) {
+      streams = content.streams.map(stream => ({
+        name: `GleyAddon - ${stream.quality || 'HD'}`,
+        title: `${stream.quality || 'HD'} • ${stream.size || 'Unknown Size'} • ${stream.language || 'Multi'}`,
+        url: stream.magnet,
+        behaviorHints: {
+          bingeGroup: 'gley-addon'
+        }
+      }));
+    }
+    
+    res.json({ streams });
+  } catch (error) {
+    console.error('Stream error:', error);
+    res.json({ streams: [] });
+  }
+});
+
+// Admin routes for managing content
+app.post('/admin/add/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    const { tmdb_id, streams } = req.body;
+    
+    const contentArray = type === 'movie' ? movieAndSeriesData.movies : movieAndSeriesData.series;
+    
+    const newContent = {
+      id: `tmdb:${tmdb_id}`,
+      tmdb_id,
+      streams: streams || []
+    };
+    
+    contentArray.push(newContent);
+    
+    res.json({ success: true, message: `${type} added successfully` });
+  } catch (error) {
+    console.error('Add content error:', error);
+    res.status(500).json({ error: 'Failed to add content' });
+  }
+});
+
+export const handler = serverless(app);

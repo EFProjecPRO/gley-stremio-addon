@@ -1,0 +1,18 @@
+{
+  "name": "gley-addon",
+  "version": "1.0.0",
+  "description": "Professional Stremio addon for movies and series with magnet links",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "serverless-http": "^3.2.0"
+    "serverless-http": "^3.2.0"
+  }
+}

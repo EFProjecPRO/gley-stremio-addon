@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GleyAddon Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .stream-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stream-group h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 GleyAddon Admin</h1>
+            <p>Professional Content Management System</p>
+        </div>
+
+        <div class="form-section">
+            <div class="instructions">
+                <h3>📋 Instructions</h3>
+                <ul>
+                    <li>Enter the TMDB ID of the movie/series (find it on themoviedb.org)</li>
+                    <li>Add magnet links for different qualities</li>
+                    <li>Make sure magnet links are valid and working</li>
+                    <li>Use descriptive quality labels (1080p, 720p, 4K, etc.)</li>
+                </ul>
+            </div>
+
+            <div id="message"></div>
+
+            <form id="contentForm">
+                <div class="form-group">
+                    <label for="type">Content Type:</label>
+                    <select id="type" required>
+                        <option value="movie">Movie</option>
+                        <option value="series">TV Series</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tmdb_id">TMDB ID:</label>
+                    <input type="number" id="tmdb_id" placeholder="e.g., 550 for Fight Club" required>
+                </div>
+
+                <div id="streamsContainer">
+                    <div class="stream-group">
+                        <h3>🎥 Stream 1</h3>
+                        <div class="form-group">
+                            <label>Quality:</label>
+                            <input type="text" class="stream-quality" placeholder="e.g., 1080p, 720p, 4K" required>
+                        </div>
+                        <div class="form-group">
+                            <label>File Size:</label>
+                            <input type="text" class="stream-size" placeholder="e.g., 2.1 GB, 1.4 GB">
+                        </div>
+                        <div class="form-group">
+                            <label>Language:</label>
+                            <input type="text" class="stream-language" placeholder="e.g., English, Multi" value="English">
+                        </div>
+                        <div class="form-group">
+                            <label>Magnet Link:</label>
+                            <textarea class="stream-magnet" placeholder="magnet:?xt=urn:btih:..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="addStream()">+ Add Another Stream</button>
+                <button type="submit" class="btn">🚀 Add Content</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let streamCount = 1;
+
+        function addStream() {
+            streamCount++;
+            const container = document.getElementById('streamsContainer');
+            const streamGroup = document.createElement('div');
+            streamGroup.className = 'stream-group';
+            streamGroup.innerHTML = `
+                <h3>🎥 Stream ${streamCount}</h3>
+                <div class="form-group">
+                    <label>Quality:</label>
+                    <input type="text" class="stream-quality" placeholder="e.g., 1080p, 720p, 4K" required>
+                </div>
+                <div class="form-group">
+                    <label>File Size:</label>
+                    <input type="text" class="stream-size" placeholder="e.g., 2.1 GB, 1.4 GB">
+                </div>
+                <div class="form-group">
+                    <label>Language:</label>
+                    <input type="text" class="stream-language" placeholder="e.g., English, Multi" value="English">
+                </div>
+                <div class="form-group">
+                    <label>Magnet Link:</label>
+                    <textarea class="stream-magnet" placeholder="magnet:?xt=urn:btih:..." required></textarea>
+                </div>
+            `;
+            container.appendChild(streamGroup);
+        }
+
+        document.getElementById('contentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const type = document.getElementById('type').value;
+            const tmdb_id = document.getElementById('tmdb_id').value;
+            
+            const streams = [];
+            const streamGroups = document.querySelectorAll('.stream-group');
+            
+            streamGroups.forEach(group => {
+                const quality = group.querySelector('.stream-quality').value;
+                const size = group.querySelector('.stream-size').value;
+                const language = group.querySelector('.stream-language').value;
+                const magnet = group.querySelector('.stream-magnet').value;
+                
+                if (quality && magnet) {
+                    streams.push({ quality, size, language, magnet });
+                }
+            });
+            
+            try {
+                const response = await fetch(`/.netlify/functions/server/admin/add/${type}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tmdb_id, streams })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    document.getElementById('contentForm').reset();
+                    streamCount = 1;
+                    document.getElementById('streamsContainer').innerHTML = `
+                        <div class="stream-group">
+                            <h3>🎥 Stream 1</h3>
+                            <div class="form-group">
+                                <label>Quality:</label>
+                                <input type="text" class="stream-quality" placeholder="e.g., 1080p, 720p, 4K" required>
+                            </div>
+                            <div class="form-group">
+                                <label>File Size:</label>
+                                <input type="text" class="stream-size" placeholder="e.g., 2.1 GB, 1.4 GB">
+                            </div>
+                            <div class="form-group">
+                                <label>Language:</label>
+                                <input type="text" class="stream-language" placeholder="e.g., English, Multi" value="English">
+                            </div>
+                            <div class="form-group">
+                                <label>Magnet Link:</label>
+                                <textarea class="stream-magnet" placeholder="magnet:?xt=urn:btih:..." required></textarea>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    showMessage(result.error || 'Failed to add content', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

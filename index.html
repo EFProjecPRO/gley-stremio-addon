@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GleyAddon - Professional Stremio Addon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .header {
+            background: url('https://i.postimg.cc/JhHrzBW0/background-Home.png') center/cover;
+            position: relative;
+            padding: 60px 40px;
+            color: white;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            border: 4px solid white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .install-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .install-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .manifest-url {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .steps {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .steps ol {
+            padding-left: 20px;
+        }
+
+        .steps li {
+            margin-bottom: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            padding: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <img src="https://i.postimg.cc/D0PyKk3c/EFProject-Logo.png" alt="GleyAddon Logo" class="logo">
+                <h1>GleyAddon</h1>
+                <p>Professional Stremio Addon for Movies & Series</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="install-section">
+                <h2>🚀 Install in Stremio</h2>
+                <div class="steps">
+                    <ol>
+                        <li>Open Stremio application</li>
+                        <li>Go to Add-ons section</li>
+                        <li>Click "Add-on Repository"</li>
+                        <li>Paste the URL below:</li>
+                    </ol>
+                </div>
+                <div class="manifest-url" id="manifestUrl">
+                    Loading manifest URL...
+                </div>
+                <a href="#" class="btn" id="installBtn">📱 Install Now</a>
+                <a href="/admin.html" class="btn">⚙️ Admin Panel</a>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>🎬 Movies & Series</h3>
+                    <p>Access to thousands of movies and TV series with high-quality streams</p>
+                </div>
+                <div class="feature">
+                    <h3>🔍 Smart Search</h3>
+                    <p>Powered by TMDB API for accurate metadata and search results</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ High Quality</h3>
+                    <p>Multiple quality options including 1080p, 720p, and 4K streams</p>
+                </div>
+                <div class="feature">
+                    <h3>🌐 Always Updated</h3>
+                    <p>Regular updates with new content and improved features</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 GleyAddon - Professional Stremio Experience</p>
+        </div>
+    </div>
+
+    <script>
+        // Set the manifest URL dynamically
+        const manifestUrl = `${window.location.origin}/.netlify/functions/server/manifest.json`;
+        document.getElementById('manifestUrl').textContent = manifestUrl;
+        document.getElementById('installBtn').href = `stremio://${manifestUrl}`;
+    </script>
+</body>
+</html>
